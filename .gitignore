@@ -1,0 +1,6 @@
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Database data folder
+pg_data/
