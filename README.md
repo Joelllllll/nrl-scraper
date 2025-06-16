@@ -18,8 +18,8 @@ cd nrl-scraper
 ```
 2. Build image and bring up containers
 ```bash
-docker-compose build
-docker-compose up
+docker-compose  build
+docker-compose  up
 ```
 This will create a PostgreSQL 15 Alpine database and start the scraper app
 

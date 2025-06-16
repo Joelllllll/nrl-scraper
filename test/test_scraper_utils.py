@@ -4,7 +4,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from models.models import parse_game_time_to_seconds
-from parse import extract_bye_teams, extract_event_data, extract_match_data
+from utils.parse import extract_bye_teams, extract_event_data, extract_match_data
 
 # -- parse_game_time_to_seconds --
 

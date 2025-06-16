@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: nrldb
     volumes:
       - ./pg_data:/var/lib/postgresql/data
-      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql:ro
+      - ./ops/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql:ro
     ports:
       - "5432:5432"
 

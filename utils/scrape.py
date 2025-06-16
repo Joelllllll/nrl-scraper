@@ -8,7 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from models.models import create_bye_match, get_or_create_event, get_or_create_match
-from parse import (
+from utils.parse import (
     extract_bye_teams,
     extract_event_data,
     extract_match_data,

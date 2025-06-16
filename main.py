@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from scrape import determine_latest_round, scrape_round
+from utils.scrape import determine_latest_round, scrape_round
 
 DATABASE_URL = (
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
