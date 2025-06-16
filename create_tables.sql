@@ -93,21 +93,6 @@ CREATE INDEX idx_player_appearance_match_team ON player_appearance(match_id, tea
 CREATE INDEX idx_team_membership_player ON team_membership(player_id);
 
 
--- Event roles
-INSERT INTO event_roles (role_name) VALUES
-('primary'),
-('on'),
-('off'),
-('dangerous tackle'),
-('professional foul'),
-('escorts'),
-('flop'),
-('slow peel'),
-('obstruction'),
-('early tackle'),
-('captain"s challenge - successful'),
-('captain"s challenge - unsuccessful');
-
 
 ALTER TABLE matches
 ADD CONSTRAINT unique_match
@@ -207,13 +192,63 @@ SELECT
     e.game_time_sec,
     et.name AS event,
     e.description,
-    m.round
+    m.round,
+    m.id AS match_id,
+    e.team_id AS team_id
 FROM events e
 INNER JOIN event_types et ON et.id = e.event_type_id
 LEFT JOIN players p ON p.id = e.player_id
 INNER JOIN matches m ON m.id = e.match_id;
 
+-- team stats like total points, tries, errors, etc.
+CREATE OR REPLACE VIEW team_stats AS
+SELECT
+    t.name AS team,
+    -- total points scored
+    SUM(CASE
+      WHEN LOWER(be.event) LIKE '%try' THEN 4
+      WHEN LOWER(be.event) = 'conversion-made' THEN 2
+      WHEN LOWER(be.event) LIKE 'penalty shot-made' THEN 2
+      WHEN LOWER(be.event) LIKE '1 point field goal-made' THEN 1
+      WHEN LOWER(be.event) LIKE '2 point field goal-made' THEN 2
+      ELSE 0 
+    END) AS total_points,
+    SUM(CASE WHEN LOWER(be.event) = 'try' THEN 1 ELSE 0 END) AS tries,
+    SUM(CASE WHEN LOWER(be.event) LIKE '%error%' THEN 1 ELSE 0 END) AS errors,
+    SUM(CASE WHEN LOWER(be.event) = 'conversion-made' THEN 1 ELSE 0 END) AS conversions_kicked,
+    SUM(CASE WHEN LOWER(be.event) = 'conversion-missed' THEN 1 ELSE 0 END) AS conversions_missed,
+    SUM(CASE WHEN LOWER(be.event) LIKE 'penalty - %'  THEN 1 ELSE 0 END) AS penalty_conceeded,
+    SUM(CASE WHEN LOWER(be.event) LIKE '%field goal-made'  THEN 1 ELSE 0 END) AS field_goals,
+    SUM(CASE WHEN LOWER(be.event) LIKE '%field goal-missed' THEN 1 ELSE 0 END) AS field_goals_missed,
+    COUNT(DISTINCT m.id) AS matches_played
+FROM basic_events be
+INNER JOIN matches m ON m.id = be.match_id
+INNER JOIN teams t ON t.id = be.team_id
+GROUP BY t.name;
+
+-- Create the player stats view
+CREATE OR REPLACE VIEW player_stats AS
+SELECT
+    be.player,
+    SUM(CASE
+      WHEN LOWER(be.event) LIKE '%try' THEN 4
+      WHEN LOWER(be.event) = 'conversion-made' THEN 2
+      WHEN LOWER(be.event) LIKE 'penalty shot-made' THEN 2
+      WHEN LOWER(be.event) LIKE '1 point field goal-made' THEN 1
+      WHEN LOWER(be.event) LIKE '2 point field goal-made' THEN 2
+      ELSE 0
+    END) AS total_points,
+    SUM(CASE WHEN LOWER(be.event) = 'try' THEN 1 ELSE 0 END) AS tries,
+    SUM(CASE WHEN LOWER(be.event) LIKE '%error%' THEN 1 ELSE 0 END) AS errors,
+    SUM(CASE WHEN LOWER(be.event) LIKE 'penalty - %'  THEN 1 ELSE 0 END) AS penalty_conceeded,
+    COUNT(DISTINCT m.id) AS matches_played
+FROM basic_events be
+INNER JOIN matches m ON m.id = be.match_id
+GROUP BY be.player
+ORDER BY total_points DESC, tries DESC, errors ASC, penalty_conceeded ASC;
+
 -- copy production to a test database
 CREATE DATABASE test
 WITH TEMPLATE nrldb
 OWNER nrluser;
+

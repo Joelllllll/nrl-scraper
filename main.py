@@ -57,10 +57,10 @@ def extract_bye_teams(html: str) -> list[str]:
     return list(bye_teams)
 
 
-def extract_match_data(match_div: BeautifulSoup) -> dict:
+def extract_match_data(match_div: BeautifulSoup, year: int) -> dict:
     "Extracts match data from a BeautifulSoup match div."
     date_tag = match_div.find("p", class_="match-header__title")
-    date = parse_date(date_tag.get_text(strip=True).split(" - ")[1], DEFAULT_YEAR)
+    date = parse_date(date_tag.get_text(strip=True).split(" - ")[1], year)
 
     round_num = int(
         (date_tag.get_text(strip=True).split(" - ")[0]).split("Round ")[-1].strip()
@@ -140,10 +140,15 @@ def extract_event_data(event) -> Generator[dict, None, None]:
 def process_match_page(session, driver: webdriver, url: str) -> None:
     print(f"Visiting match URL: {url}")
     driver.get(f"{BASE_URL}/{url}")
+    year = re.search(r'/(\d{4})/', url).group(1)
     soup = BeautifulSoup(driver.page_source, "html.parser")
     for match_div in soup.find_all("div", class_="match"):
-        data = extract_match_data(match_div)
+        data = extract_match_data(match_div, year)
         match = get_or_create_match(session, data)
+        if len(match.events) > 0:
+            print(f"Match {match.id} already has events, skipping event scraping.")
+            continue
+        print(f"Processing match events for match ID: {match.id}")
         try:
             # wait random time between 0 and 6 seconds to avoid being blocked
             play_by_play_tab = WebDriverWait(driver, random.randint(0, 6)).until(

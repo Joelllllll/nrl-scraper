@@ -101,7 +101,7 @@ def test_extract_match_data():
         "attendance": "15,234",
     }
 
-    result = extract_match_data(match_div)
+    result = extract_match_data(match_div, "2025")
     assert result == expected
 
 
