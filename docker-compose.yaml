@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: nrl_db
+    restart: always
+    environment:
+      POSTGRES_USER: nrluser
+      POSTGRES_PASSWORD: nrlpass
+      POSTGRES_DB: nrldb
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql:ro
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: nrl_scraper
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: nrluser
+      DB_PASSWORD: nrlpass
+      DB_NAME: nrldb
+    volumes:
+      - .:/app
+    command: tail -f /dev/null
+    working_dir: /app
