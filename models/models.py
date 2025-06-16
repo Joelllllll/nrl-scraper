@@ -1,11 +1,16 @@
-from datetime import datetime
-import re
 from sqlalchemy import (
-    Column, Integer, String, Date, Text, ForeignKey, ARRAY, DateTime,
-    UniqueConstraint, PrimaryKeyConstraint, Index
+    ARRAY,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    PrimaryKeyConstraint,
+    String,
+    Text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -142,11 +147,6 @@ def parse_game_time_to_seconds(time_str: str) -> int:
     except Exception as e:
         print(f"Error parsing time '{time_str}': {e}")
         return 0
-    
-def parse_date(date_str: str, year: int) -> datetime:
-    "Parses a date string in the format 'Day DD Month YYYY' and returns a datetime object."
-    clean_str = re.sub(r'(\d{1,2})(st|nd|rd|th)', r'\1', date_str + " " + year)
-    return datetime.strptime(clean_str, "%A %d %B %Y")
 
 class Team(Base):
     __tablename__ = 'teams'

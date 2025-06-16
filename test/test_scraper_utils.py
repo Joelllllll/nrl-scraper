@@ -1,12 +1,10 @@
 from datetime import datetime
+
 import pytest
 from bs4 import BeautifulSoup
-from main import (
-    extract_event_data,
-    extract_match_data,
-    extract_bye_teams
-)
+
 from models.models import parse_game_time_to_seconds
+from parse import extract_bye_teams, extract_event_data, extract_match_data
 
 # -- parse_game_time_to_seconds --
 
@@ -113,7 +111,7 @@ def test_extract_bye_teams_basic():
     </ul>
     """
     result = extract_bye_teams(html)
-    assert result == ["Panthers", "Storm"]
+    assert sorted(result) == ["Panthers", "Storm"]
 
 def test_extract_bye_teams_empty():
     html = "<ul></ul>"

@@ -1,12 +1,12 @@
-import sys
 import os
+import sys
 from datetime import datetime
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
+from main import create_db_session
 from models.models import (
     get_or_create_event_role,
     get_or_create_event_type,
@@ -38,9 +38,7 @@ def make_match_data(home, away, home_score=10, away_score=12):
 
 @pytest.fixture(scope="function")
 def session():
-    engine = create_engine(DATABASE_URL)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    return create_db_session(DATABASE_URL)()
 
 def test_get_or_create_team(session):
     team = get_or_create_team(session, "Rabbitohs")
