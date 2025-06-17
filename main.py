@@ -3,8 +3,6 @@
 import argparse
 from dataclasses import dataclass
 
-from tqdm import tqdm
-
 from utils.db import create_db_session
 from utils.scrape import ScrapeConfig, create_driver, determine_latest_round, scrape_round
 
@@ -42,7 +40,7 @@ def main() -> None:
 
     try:
         latest_round = determine_latest_round(config)
-        for round_number in tqdm(range(args.start_round, latest_round)):
+        for round_number in range(args.start_round, latest_round):
             scrape_round(config=config, round_number=round_number)
     finally:
         config.driver.quit()

@@ -21,12 +21,14 @@ BASE_URL = "https://www.nrl.com"
 DEFAULT_YEAR = "2025"
 DEFAULT_COMP = 111  # NRL competition ID
 
+
 @dataclass
 class ScrapeConfig:
     session: OrmSession
     driver: webdriver
     year: int = DEFAULT_YEAR
     competition_id: int = DEFAULT_COMP
+
 
 def create_driver() -> webdriver.Chrome:
     options = Options()
@@ -38,10 +40,11 @@ def create_driver() -> webdriver.Chrome:
     options.binary_location = "/usr/bin/chromium"
     return webdriver.Chrome(options=options)
 
+
 def process_match_page(session: OrmSession, driver: webdriver, url: str) -> None:
     print(f"Visiting match URL: {url}")
     driver.get(f"{BASE_URL}/{url}")
-    year = re.search(r'/(\d{4})/', url).group(1)
+    year = re.search(r"/(\d{4})/", url).group(1)
     soup = BeautifulSoup(driver.page_source, "html.parser")
     for match_div in soup.find_all("div", class_="match"):
         data = extract_match_data(match_div, year)
