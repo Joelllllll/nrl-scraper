@@ -1,13 +1,16 @@
 import os
 import sys
 from datetime import datetime
+from typing import Callable
+
+from sqlalchemy.orm import Session as OrmSession
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pytest
 
 from main import create_db_session
-from models.models import (
+from utils.db import (
     get_or_create_event_role,
     get_or_create_event_type,
     get_or_create_match,
@@ -16,12 +19,11 @@ from models.models import (
 )
 
 DATABASE_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/test"
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/test"
 )
 
 
-def make_match_data(home, away, home_score=10, away_score=12):
+def make_match_data(home, away, home_score=10, away_score=12) -> dict[str, any]:
     return {
         "round": 1,
         "date": datetime(2025, 3, 2, 15, 0),
@@ -37,28 +39,33 @@ def make_match_data(home, away, home_score=10, away_score=12):
 
 
 @pytest.fixture(scope="function")
-def session():
+def session() -> Callable[[], OrmSession]:
     return create_db_session(DATABASE_URL)()
 
-def test_get_or_create_team(session):
+
+def test_get_or_create_team(session) -> None:
     team = get_or_create_team(session, "Rabbitohs")
     assert team.name == "Rabbitohs"
     team2 = get_or_create_team(session, "Rabbitohs")
     assert team.id == team2.id  # should not create duplicate
 
-def test_get_or_create_event_type(session):
+
+def test_get_or_create_event_type(session) -> None:
     et = get_or_create_event_type(session, "Try")
     assert et.name == "Try"
 
-def test_get_or_create_player(session):
+
+def test_get_or_create_player(session) -> None:
     player = get_or_create_player(session, "Latrell Mitchell")
     assert player.name == "Latrell Mitchell"
 
-def test_get_or_create_event_role(session):
+
+def test_get_or_create_event_role(session) -> None:
     role = get_or_create_event_role(session, "Try Scorer")
     assert role.role_name == "Try Scorer"
 
-def test_creates_new_match(session):
+
+def test_creates_new_match(session) -> None:
     data = make_match_data("Storm", "Eels", 20, 18)
     match = get_or_create_match(session, data)
 

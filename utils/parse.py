@@ -10,6 +10,16 @@ def parse_date(date_str: str, year: int) -> datetime:
     clean_str = re.sub(r'(\d{1,2})(st|nd|rd|th)', r'\1', date_str + " " + year)
     return datetime.strptime(clean_str, "%A %d %B %Y")
 
+def parse_game_time_to_seconds(time_str: str) -> int:
+    "Takes in game time in 'MM:SS' format and converts it to seconds."
+    try:
+        minutes, seconds = map(int, time_str.strip().split(":"))
+        return minutes * 60 + seconds
+    except Exception as e:
+        print(f"Error parsing time '{time_str}': {e}")
+        return 0
+
+
 def extract_bye_teams(html: str) -> list[str]:
     soup = BeautifulSoup(html, "html.parser")
     bye_teams = set()

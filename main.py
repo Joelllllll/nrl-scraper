@@ -1,39 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
-import random
+from dataclasses import dataclass
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from tqdm import tqdm
 
-from utils.scrape import determine_latest_round, scrape_round
-
-DATABASE_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-)
+from utils.db import create_db_session
+from utils.scrape import ScrapeConfig, create_driver, determine_latest_round, scrape_round
 
 
-def create_driver() -> webdriver.Chrome:
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument(f"--user-data-dir=/tmp/chrome-user-data-{random.randint(1000, 9999)}")
-    options.binary_location = "/usr/bin/chromium"
-    return webdriver.Chrome(options=options)
-
-
-def create_db_session(database_url: str = DATABASE_URL) -> sessionmaker:
-    engine = create_engine(database_url, echo=False)
-    return sessionmaker(bind=engine)
-
-
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Scrape NRL match data for a given year and round.")
     parser.add_argument("--year", type=int, required=True, help="Year to scrape data for (e.g. 2025)")
     parser.add_argument("--comp", type=int, default=111, help="Competition ID to scrape (default: 111 for NRL)")
@@ -41,7 +17,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+@dataclass
+class ScrapeArgs:
+    year: int
+    comp: int
+    start_round: int
+
+
+def main() -> None:
     args = parse_args()
     print(
         f"Starting NRL data scraping for:\n"
@@ -50,22 +33,19 @@ def main():
         f"  Starting Round: {args.start_round}"
     )
 
-    driver = create_driver()
-    Session = create_db_session()
-    
+    config = ScrapeConfig(
+        session=create_db_session()(),
+        driver=create_driver(),
+        year=args.year,
+        competition_id=args.comp,
+    )
+
     try:
-        with Session() as session:
-            latest_round = determine_latest_round(driver, args.year, args.comp)
-            for round_number in range(args.start_round, latest_round):
-                scrape_round(
-                    session=session,
-                    driver=driver,
-                    round_number=round_number,
-                    year=args.year,
-                    competition_id=args.comp,
-                )
+        latest_round = determine_latest_round(config)
+        for round_number in tqdm(range(args.start_round, latest_round)):
+            scrape_round(config=config, round_number=round_number)
     finally:
-        driver.quit()
+        config.driver.quit()
 
     print("Scraping completed.")
 

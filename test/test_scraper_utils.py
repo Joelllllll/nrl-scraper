@@ -3,8 +3,7 @@ from datetime import datetime
 import pytest
 from bs4 import BeautifulSoup
 
-from models.models import parse_game_time_to_seconds
-from utils.parse import extract_bye_teams, extract_event_data, extract_match_data
+from utils.parse import extract_bye_teams, extract_event_data, extract_match_data, parse_game_time_to_seconds
 
 # -- parse_game_time_to_seconds --
 
@@ -16,12 +15,12 @@ from utils.parse import extract_bye_teams, extract_event_data, extract_match_dat
     ("80:00", 4800),
     ("bad", 0)
 ])
-def test_parse_game_time_to_seconds(input_str, expected):
+def test_parse_game_time_to_seconds(input_str, expected) -> None:
     assert parse_game_time_to_seconds(input_str) == expected
 
 # -- parse_event --
 
-def test_parse_event_single_player():
+def test_parse_event_single_player() -> None:
     html = '''
     <div class="match-centre-event__content">
         <span class="match-centre-event__timestamp">52:54</span>
@@ -39,7 +38,7 @@ def test_parse_event_single_player():
         assert result["team_name"] == "Storm"
         assert result["player"] == "Cameron Munster"
 
-def test_parse_event_multiple_players():
+def test_parse_event_multiple_players() -> None:
     html = '''
     <div class="match-centre-event__content">
         <span class="match-centre-event__timestamp">65:20</span>
@@ -67,7 +66,7 @@ def test_parse_event_multiple_players():
     assert results[1]["player"] == "Brian To'o"
     assert results[1]["role"] == "off"
 
-def test_extract_match_data():
+def test_extract_match_data() -> None:
     html = """
     <div>
         <p class="match-header__title">Round 12 - Sunday 26 May</p>
@@ -103,7 +102,7 @@ def test_extract_match_data():
     assert result == expected
 
 
-def test_extract_bye_teams_basic():
+def test_extract_bye_teams_basic() -> None:
     html = """
     <ul>
         <li class="match-bye-team"><span class="u-visually-hidden">Panthers</span></li>
@@ -113,12 +112,12 @@ def test_extract_bye_teams_basic():
     result = extract_bye_teams(html)
     assert sorted(result) == ["Panthers", "Storm"]
 
-def test_extract_bye_teams_empty():
+def test_extract_bye_teams_empty() -> None:
     html = "<ul></ul>"
     result = extract_bye_teams(html)
     assert result == []
 
-def test_extract_bye_teams_ignores_non_hidden_spans():
+def test_extract_bye_teams_ignores_non_hidden_spans() -> None:
     html = """
     <ul>
         <li class="match-bye-team"><span>Visible Text</span></li>
@@ -128,7 +127,7 @@ def test_extract_bye_teams_ignores_non_hidden_spans():
     result = extract_bye_teams(html)
     assert result == ["Cowboys"]
 
-def test_extract_bye_teams_ignores_empty_spans():
+def test_extract_bye_teams_ignores_empty_spans() -> None:
     html = """
     <ul>
         <li class="match-bye-team"><span class="u-visually-hidden">   </span></li>
